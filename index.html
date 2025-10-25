@@ -1,0 +1,1821 @@
+<!DOCTYPE html>
+<html lang="ku">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>LUXURY - فرۆشگای جلوبەرگی لوتکە</title>
+    
+    <!-- Firebase SDK -->
+    <script src="https://www.gstatic.com/firebasejs/9.6.10/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.6.10/firebase-database-compat.js"></script>
+    
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: 'Arial', sans-serif;
+            background: linear-gradient(135deg, #0c0c0c 0%, #1a1a1a 100%);
+            color: #e0e0e0;
+            line-height: 1.8;
+            overflow-x: hidden;
+        }
+
+        /* هێدەری لوتکە */
+        .header {
+            background: rgba(10, 10, 10, 0.95);
+            backdrop-filter: blur(20px);
+            border-bottom: 1px solid rgba(255, 215, 0, 0.3);
+            padding: 1.2rem 0;
+            position: fixed;
+            width: 100%;
+            top: 0;
+            z-index: 1000;
+        }
+        
+        .nav {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            max-width: 1400px;
+            margin: 0 auto;
+            padding: 0 3rem;
+        }
+        
+        .logo {
+            font-size: 2.2rem;
+            font-weight: bold;
+            background: linear-gradient(135deg, #D4AF37 0%, #FFD700 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+        
+        .nav-links {
+            display: flex;
+            list-style: none;
+            gap: 2rem;
+            align-items: center;
+        }
+        
+        .nav-links a {
+            color: #e0e0e0;
+            text-decoration: none;
+            font-size: 1.1rem;
+            transition: all 0.3s ease;
+            position: relative;
+            padding: 0.5rem 0;
+        }
+        
+        .nav-links a:hover {
+            color: #FFD700;
+        }
+        
+        .nav-links a::after {
+            content: '';
+            position: absolute;
+            bottom: 0;
+            left: 0;
+            width: 0;
+            height: 2px;
+            background: linear-gradient(90deg, #D4AF37, #FFD700);
+            transition: width 0.3s ease;
+        }
+        
+        .nav-links a:hover::after {
+            width: 100%;
+        }
+
+        .cart-icon {
+            position: relative;
+            cursor: pointer;
+            font-size: 1.3rem;
+            transition: transform 0.3s ease;
+        }
+        
+        .cart-icon:hover {
+            transform: scale(1.1);
+            color: #FFD700;
+        }
+        
+        .cart-count {
+            position: absolute;
+            top: -8px;
+            right: -8px;
+            background: linear-gradient(135deg, #D4AF37, #FFD700);
+            color: #000;
+            border-radius: 50%;
+            width: 22px;
+            height: 22px;
+            font-size: 0.8rem;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: bold;
+        }
+
+        .notification-badge {
+            position: absolute;
+            top: -8px;
+            right: -8px;
+            background: linear-gradient(135deg, #dc3545, #c82333);
+            color: white;
+            border-radius: 50%;
+            width: 20px;
+            height: 20px;
+            font-size: 0.7rem;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: bold;
+            display: none;
+        }
+
+        /* بەشی بەڕێوەبردن */
+        .admin-header {
+            background: linear-gradient(135deg, rgba(212, 175, 55, 0.1) 0%, rgba(255, 215, 0, 0.05) 100%);
+            backdrop-filter: blur(20px);
+            border-bottom: 1px solid rgba(212, 175, 55, 0.3);
+            padding: 1.5rem 0;
+            margin-top: 80px;
+            display: none;
+        }
+        
+        .admin-nav {
+            max-width: 1400px;
+            margin: 0 auto;
+            padding: 0 3rem;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        
+        .admin-title {
+            font-size: 1.8rem;
+            font-weight: bold;
+            color: #FFD700;
+        }
+        
+        .admin-buttons {
+            display: flex;
+            gap: 1.5rem;
+        }
+        
+        .admin-btn {
+            background: rgba(212, 175, 55, 0.1);
+            color: #FFD700;
+            padding: 12px 25px;
+            border: 1px solid rgba(212, 175, 55, 0.3);
+            border-radius: 25px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            font-size: 0.9rem;
+            position: relative;
+        }
+        
+        .admin-btn:hover {
+            background: rgba(212, 175, 55, 0.2);
+            border-color: #FFD700;
+            transform: translateY(-2px);
+        }
+
+        /* پانێلی بەڕێوەبردن */
+        .admin-panel {
+            background: rgba(20, 20, 20, 0.8);
+            backdrop-filter: blur(20px);
+            border: 1px solid rgba(212, 175, 55, 0.2);
+            border-radius: 20px;
+            padding: 3rem;
+            margin: 3rem auto;
+            max-width: 1400px;
+            display: none;
+        }
+        
+        .admin-section {
+            margin-bottom: 4rem;
+        }
+        
+        .admin-section-title {
+            font-size: 2.2rem;
+            color: #FFD700;
+            margin-bottom: 2rem;
+            padding-bottom: 1rem;
+            border-bottom: 2px solid rgba(212, 175, 55, 0.3);
+        }
+
+        .admin-form {
+            display: grid;
+            gap: 1.5rem;
+            margin-bottom: 2rem;
+        }
+        
+        .form-group {
+            display: flex;
+            flex-direction: column;
+        }
+        
+        .form-group label {
+            margin-bottom: 0.5rem;
+            color: #FFD700;
+            font-weight: bold;
+        }
+        
+        .form-group input,
+        .form-group textarea,
+        .form-group select {
+            padding: 12px;
+            background: rgba(10, 10, 10, 0.8);
+            border: 1px solid rgba(212, 175, 55, 0.3);
+            border-radius: 8px;
+            color: #e0e0e0;
+            font-size: 1rem;
+            transition: all 0.3s ease;
+        }
+        
+        .form-group input:focus,
+        .form-group textarea:focus,
+        .form-group select:focus {
+            outline: none;
+            border-color: #FFD700;
+        }
+        
+        .form-row {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 1rem;
+        }
+
+        .image-upload {
+            border: 2px dashed rgba(212, 175, 55, 0.3);
+            border-radius: 10px;
+            padding: 2rem;
+            text-align: center;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            margin-top: 1rem;
+        }
+        
+        .image-upload:hover {
+            border-color: #FFD700;
+            background: rgba(212, 175, 55, 0.05);
+        }
+        
+        .upload-icon {
+            font-size: 3rem;
+            color: rgba(212, 175, 55, 0.5);
+            margin-bottom: 1rem;
+        }
+        
+        .image-preview {
+            max-width: 100%;
+            max-height: 200px;
+            margin-top: 1rem;
+            border-radius: 8px;
+            display: none;
+        }
+
+        .hero {
+            background: 
+                linear-gradient(135deg, rgba(10, 10, 10, 0.9) 0%, rgba(26, 26, 26, 0.8) 100%),
+                url('https://images.unsplash.com/photo-1445205170230-053b83016050?ixlib=rb-4.0.3');
+            background-size: cover;
+            background-position: center;
+            height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            text-align: center;
+            position: relative;
+        }
+        
+        .hero-content {
+            position: relative;
+            z-index: 2;
+            max-width: 800px;
+            padding: 0 2rem;
+        }
+        
+        .hero-content h1 {
+            font-size: 4.5rem;
+            margin-bottom: 1.5rem;
+            background: linear-gradient(135deg, #D4AF37 0%, #FFD700 50%, #FFFFFF 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            line-height: 1.2;
+        }
+        
+        .hero-content p {
+            font-size: 1.4rem;
+            margin-bottom: 3rem;
+            color: #e0e0e0;
+        }
+
+        .btn {
+            background: linear-gradient(135deg, #D4AF37 0%, #FFD700 100%);
+            color: #000;
+            padding: 18px 40px;
+            border: none;
+            border-radius: 50px;
+            cursor: pointer;
+            font-size: 1.1rem;
+            font-weight: bold;
+            transition: all 0.3s ease;
+            text-decoration: none;
+            display: inline-block;
+        }
+        
+        .btn:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 10px 25px rgba(212, 175, 55, 0.4);
+        }
+
+        .btn-secondary {
+            background: transparent;
+            color: #FFD700;
+            border: 2px solid #FFD700;
+        }
+        
+        .btn-secondary:hover {
+            background: rgba(255, 215, 0, 0.1);
+        }
+
+        .btn-danger {
+            background: linear-gradient(135deg, #dc3545, #c82333);
+        }
+        
+        .btn-success {
+            background: linear-gradient(135deg, #28a745, #218838);
+        }
+        
+        .btn-warning {
+            background: linear-gradient(135deg, #ffc107, #e0a800);
+            color: #000;
+        }
+
+        .products {
+            max-width: 1400px;
+            margin: 6rem auto;
+            padding: 0 3rem;
+        }
+        
+        .section-title {
+            text-align: center;
+            margin-bottom: 4rem;
+            font-size: 3rem;
+            background: linear-gradient(135deg, #D4AF37, #FFD700);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+        
+        .products-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
+            gap: 3rem;
+            margin-bottom: 4rem;
+        }
+        
+        .product-card {
+            background: rgba(30, 30, 30, 0.6);
+            backdrop-filter: blur(20px);
+            border: 1px solid rgba(212, 175, 55, 0.2);
+            border-radius: 20px;
+            overflow: hidden;
+            transition: all 0.4s ease;
+        }
+        
+        .product-card:hover {
+            transform: translateY(-10px);
+            border-color: rgba(212, 175, 55, 0.5);
+        }
+        
+        .product-image {
+            width: 100%;
+            height: 300px;
+            background: linear-gradient(135deg, #1a1a1a, #2a2a2a);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            overflow: hidden;
+            position: relative;
+        }
+        
+        .product-image::after {
+            content: 'LUXURY';
+            position: absolute;
+            bottom: 10px;
+            right: 10px;
+            background: rgba(212, 175, 55, 0.9);
+            color: #000;
+            padding: 5px 10px;
+            border-radius: 15px;
+            font-size: 0.8rem;
+            font-weight: bold;
+        }
+        
+        .product-image img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+        }
+        
+        .product-image-placeholder {
+            font-size: 4rem;
+            color: rgba(212, 175, 55, 0.3);
+        }
+        
+        .product-info {
+            padding: 2rem;
+        }
+        
+        .product-title {
+            font-size: 1.4rem;
+            margin-bottom: 1rem;
+            color: #FFD700;
+            font-weight: bold;
+        }
+        
+        .product-description {
+            color: #b0b0b0;
+            margin-bottom: 1.5rem;
+        }
+        
+        .product-price {
+            color: #FFD700;
+            font-weight: bold;
+            font-size: 1.6rem;
+            margin: 1.5rem 0;
+        }
+        
+        .cash-badge {
+            background: linear-gradient(135deg, rgba(212, 175, 55, 0.2), rgba(255, 215, 0, 0.1));
+            color: #FFD700;
+            padding: 8px 15px;
+            border-radius: 20px;
+            font-size: 0.8rem;
+            display: inline-block;
+            margin-bottom: 1rem;
+            border: 1px solid rgba(212, 175, 55, 0.3);
+        }
+        
+        .product-actions {
+            display: flex;
+            gap: 1rem;
+            margin-top: 1.5rem;
+        }
+
+        .search-container {
+            max-width: 1400px;
+            margin: 180px auto 4rem;
+            padding: 0 3rem;
+        }
+        
+        .search-box {
+            display: flex;
+            gap: 1.5rem;
+            margin-bottom: 2rem;
+        }
+        
+        .search-input {
+            flex: 1;
+            padding: 18px 25px;
+            background: rgba(30, 30, 30, 0.6);
+            border: 1px solid rgba(212, 175, 55, 0.3);
+            border-radius: 50px;
+            font-size: 1.1rem;
+            color: #e0e0e0;
+        }
+        
+        .search-input:focus {
+            outline: none;
+            border-color: #FFD700;
+        }
+        
+        .search-filters {
+            display: flex;
+            gap: 1.5rem;
+            flex-wrap: wrap;
+        }
+        
+        .filter-select {
+            padding: 12px 20px;
+            background: rgba(30, 30, 30, 0.6);
+            border: 1px solid rgba(212, 175, 55, 0.3);
+            border-radius: 25px;
+            color: #e0e0e0;
+            cursor: pointer;
+        }
+
+        .comments-section {
+            margin-top: 4rem;
+            padding: 3rem;
+            background: rgba(30, 30, 30, 0.6);
+            border: 1px solid rgba(212, 175, 55, 0.2);
+            border-radius: 20px;
+        }
+        
+        .comment-form {
+            margin-bottom: 3rem;
+        }
+        
+        .comment-input {
+            width: 100%;
+            padding: 15px 20px;
+            background: rgba(20, 20, 20, 0.8);
+            border: 1px solid rgba(212, 175, 55, 0.3);
+            border-radius: 15px;
+            margin-bottom: 1.5rem;
+            resize: vertical;
+            color: #e0e0e0;
+            font-size: 1rem;
+        }
+        
+        .comments-list {
+            max-height: 500px;
+            overflow-y: auto;
+        }
+        
+        .comment {
+            padding: 1.5rem;
+            border-bottom: 1px solid rgba(212, 175, 55, 0.1);
+        }
+        
+        .comment-author {
+            font-weight: bold;
+            color: #FFD700;
+            margin-bottom: 0.5rem;
+        }
+        
+        .comment-date {
+            color: #888;
+            font-size: 0.9rem;
+        }
+        
+        .comment-text {
+            margin-top: 1rem;
+            color: #e0e0e0;
+        }
+
+        .services {
+            max-width: 1400px;
+            margin: 6rem auto;
+            padding: 0 3rem;
+        }
+        
+        .services-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 3rem;
+        }
+        
+        .service-card {
+            background: rgba(30, 30, 30, 0.6);
+            padding: 3rem 2rem;
+            border-radius: 20px;
+            border: 1px solid rgba(212, 175, 55, 0.2);
+            text-align: center;
+            transition: all 0.4s ease;
+        }
+        
+        .service-card:hover {
+            transform: translateY(-10px);
+            border-color: rgba(212, 175, 55, 0.5);
+        }
+        
+        .service-icon {
+            font-size: 4rem;
+            margin-bottom: 2rem;
+            background: linear-gradient(135deg, #D4AF37, #FFD700);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+        
+        .service-card h3 {
+            color: #FFD700;
+            margin-bottom: 1rem;
+            font-size: 1.4rem;
+        }
+        
+        .service-card p {
+            color: #b0b0b0;
+        }
+
+        .cart-modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.8);
+            z-index: 2000;
+        }
+        
+        .cart-content {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            background: rgba(20, 20, 20, 0.95);
+            border: 1px solid rgba(212, 175, 55, 0.3);
+            padding: 3rem;
+            border-radius: 20px;
+            max-width: 600px;
+            width: 90%;
+            max-height: 80vh;
+            overflow-y: auto;
+        }
+        
+        .cart-items {
+            margin: 2rem 0;
+        }
+        
+        .cart-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 1.5rem 0;
+            border-bottom: 1px solid rgba(212, 175, 55, 0.1);
+        }
+        
+        .checkout-btn {
+            background: linear-gradient(135deg, #D4AF37, #FFD700);
+            width: 100%;
+            padding: 20px;
+            font-size: 1.2rem;
+            font-weight: bold;
+        }
+
+        .checkout-form {
+            background: rgba(20, 20, 20, 0.95);
+            border: 1px solid rgba(212, 175, 55, 0.3);
+            border-radius: 20px;
+            padding: 3rem;
+            margin: 3rem auto;
+            max-width: 600px;
+            display: none;
+        }
+
+        .footer {
+            background: linear-gradient(135deg, #0c0c0c 0%, #1a1a1a 100%);
+            border-top: 1px solid rgba(212, 175, 55, 0.3);
+            color: #e0e0e0;
+            text-align: center;
+            padding: 4rem 0;
+            margin-top: 6rem;
+        }
+        
+        .payment-methods {
+            display: flex;
+            justify-content: center;
+            gap: 2rem;
+            margin: 3rem 0;
+            flex-wrap: wrap;
+        }
+        
+        .payment-method {
+            background: rgba(212, 175, 55, 0.1);
+            color: #FFD700;
+            padding: 1.5rem 3rem;
+            border-radius: 15px;
+            font-weight: bold;
+            border: 1px solid rgba(212, 175, 55, 0.3);
+        }
+
+        .notification-alert {
+            position: fixed;
+            top: 100px;
+            right: 20px;
+            background: linear-gradient(135deg, #28a745, #218838);
+            color: white;
+            padding: 20px;
+            border-radius: 10px;
+            border: 2px solid rgba(255, 255, 255, 0.3);
+            z-index: 3000;
+            max-width: 400px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.3);
+            animation: slideIn 0.5s ease;
+        }
+
+        .notifications-list {
+            max-height: 500px;
+            overflow-y: auto;
+        }
+
+        .notification-item {
+            background: rgba(30, 30, 30, 0.6);
+            border: 1px solid rgba(212, 175, 55, 0.3);
+            border-radius: 10px;
+            padding: 1.5rem;
+            margin-bottom: 1rem;
+            transition: all 0.3s ease;
+        }
+
+        .notification-item:hover {
+            border-color: rgba(212, 175, 55, 0.6);
+            transform: translateY(-2px);
+        }
+
+        .notification-item.new {
+            background: rgba(40, 167, 69, 0.1);
+            border-color: rgba(40, 167, 69, 0.3);
+        }
+
+        .notification-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 1rem;
+        }
+
+        .notification-title {
+            color: #FFD700;
+            font-weight: bold;
+            font-size: 1.1rem;
+        }
+
+        .notification-time {
+            color: #888;
+            font-size: 0.9rem;
+        }
+
+        .notification-content {
+            color: #e0e0e0;
+            line-height: 1.6;
+        }
+
+        .live-update-badge {
+            background: linear-gradient(135deg, #dc3545, #c82333);
+            color: white;
+            padding: 4px 8px;
+            border-radius: 12px;
+            font-size: 0.7rem;
+            margin-left: 8px;
+            animation: pulse 2s infinite;
+        }
+
+        .firebase-status {
+            position: fixed;
+            bottom: 20px;
+            right: 20px;
+            background: rgba(30, 30, 30, 0.9);
+            border: 1px solid rgba(212, 175, 55, 0.3);
+            border-radius: 10px;
+            padding: 10px 15px;
+            font-size: 0.8rem;
+            z-index: 1000;
+        }
+
+        .status-connected {
+            color: #28a745;
+        }
+
+        .status-disconnected {
+            color: #dc3545;
+        }
+
+        @keyframes slideIn {
+            from { transform: translateX(100%); opacity: 0; }
+            to { transform: translateX(0); opacity: 1; }
+        }
+
+        @keyframes pulse {
+            0% { transform: scale(1); }
+            50% { transform: scale(1.05); }
+            100% { transform: scale(1); }
+        }
+
+        @media (max-width: 768px) {
+            .nav { padding: 0 1rem; }
+            .nav-links { gap: 1.5rem; }
+            .hero-content h1 { font-size: 2.5rem; }
+            .products-grid { grid-template-columns: 1fr; }
+            .search-box { flex-direction: column; }
+            .admin-buttons { flex-direction: column; }
+            .form-row { grid-template-columns: 1fr; }
+            .notification-alert { 
+                right: 10px; 
+                left: 10px; 
+                max-width: none; 
+            }
+        }
+    </style>
+</head>
+<body>
+    <!-- هێدەری لوتکە -->
+    <header class="header">
+        <nav class="nav">
+            <div class="logo">LUXURY</div>
+            <ul class="nav-links">
+                <li><a href="#home">سەرەکی</a></li>
+                <li><a href="#products">کاڵاکان</a></li>
+                <li><a href="#services">خزمەتگوزاری</a></li>
+                <li><a href="#contact">پەیوەندی</a></li>
+                <li id="loginButtonItem">
+                    <a href="javascript:void(0)" onclick="login()" style="background: linear-gradient(135deg, #D4AF37, #FFD700); color: #000; padding: 8px 20px; border-radius: 20px; font-weight: bold;">🔐 چوونەژوورەوە</a>
+                </li>
+                <li id="logoutButtonItem" style="display: none;">
+                    <a href="javascript:void(0)" onclick="logout()" style="background: linear-gradient(135deg, #dc3545, #c82333); color: white; padding: 8px 20px; border-radius: 20px; font-weight: bold;">🚪 چوونەدەرەوە</a>
+                </li>
+                <li class="cart-icon" onclick="toggleCart()">
+                    🛒 <span class="cart-count">0</span>
+                </li>
+                <li id="adminNotificationItem" style="display: none; position: relative;">
+                    <a href="javascript:void(0)" onclick="showNotifications()" style="color: #e0e0e0; text-decoration: none; font-size: 1.3rem;">
+                        🔔 <span class="notification-badge" id="notificationBadge">0</span>
+                    </a>
+                </li>
+            </ul>
+        </nav>
+    </header>
+
+    <!-- بەشی بەڕێوەبردن -->
+    <div class="admin-header" id="adminHeader">
+        <div class="admin-nav">
+            <div class="admin-title">🎯 بەشی بەڕێوەبردن</div>
+            <div class="admin-buttons">
+                <button class="admin-btn" onclick="showAddProductForm()">➕ کاڵای نوێ</button>
+                <button class="admin-btn" onclick="showProductsList()">📦 کاڵاکان</button>
+                <button class="admin-btn" onclick="showStatistics()">📊 ئامار</button>
+                <button class="admin-btn" onclick="showNotifications()" id="notificationsBtn">
+                    🔔 Notificationەکان
+                    <span class="notification-badge" id="adminNotificationBadge">0</span>
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- پانێلی بەڕێوەبردن -->
+    <div class="admin-panel" id="adminPanel">
+        <!-- فۆرمی زیادکردنی کاڵا -->
+        <div class="admin-section" id="addProductSection">
+            <h2 class="admin-section-title">زیادکردنی کاڵای نوێ</h2>
+            <form class="admin-form" id="addProductForm">
+                <div class="form-row">
+                    <div class="form-group">
+                        <label for="productName">ناوی کاڵا:</label>
+                        <input type="text" id="productName" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="productPrice">نرخ (دینار):</label>
+                        <input type="number" id="productPrice" required>
+                    </div>
+                </div>
+                <div class="form-group">
+                    <label for="productDescription">ڕونکردنەوە:</label>
+                    <textarea id="productDescription" rows="3" required></textarea>
+                </div>
+                <div class="form-row">
+                    <div class="form-group">
+                        <label for="productCategory">جۆر:</label>
+                        <select id="productCategory" required>
+                            <option value="👕">پیراهەت</option>
+                            <option value="👖">پانتۆڵ</option>
+                            <option value="🧥">جاکێت</option>
+                            <option value="👟">پێڵاو</option>
+                            <option value="👗">جلی ئافڕەت</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label for="productStock">بڕی بەردەست:</label>
+                        <input type="number" id="productStock" value="1" min="1" required>
+                    </div>
+                </div>
+                
+                <div class="form-row">
+                    <button type="submit" class="btn btn-success">💾 زیادکردنی کاڵا</button>
+                    <button type="button" class="btn btn-secondary" onclick="clearForm()">♻️ پاککردنەوە</button>
+                </div>
+            </form>
+        </div>
+
+        <!-- لیستی کاڵاکان بۆ ئەدمین -->
+        <div class="admin-section" id="productsListSection" style="display: none;">
+            <h2 class="admin-section-title">بەڕێوەبردنی کاڵاکان</h2>
+            <div class="products-grid" id="adminProductsGrid">
+                <!-- کاڵاکان بۆ ئەدمین لێرە دێن -->
+            </div>
+        </div>
+
+        <!-- ئامار -->
+        <div class="admin-section" id="statisticsSection" style="display: none;">
+            <h2 class="admin-section-title">ئامار و ڕاپۆڕت 
+                <span class="live-update-badge" id="liveUpdateBadge">ڕاستەوخۆ</span>
+            </h2>
+            <div class="services-grid">
+                <div class="service-card">
+                    <h3>کۆی کاڵاکان</h3>
+                    <div style="display: flex; justify-content: space-between; margin-top: 1.5rem; padding-top: 1rem; border-top: 1px solid rgba(212, 175, 55, 0.2);">
+                        <div style="text-align: center;">
+                            <div style="font-size: 2rem; font-weight: bold; color: #FFD700;" id="totalProducts">0</div>
+                            <div style="font-size: 0.9rem; color: #b0b0b0;">کاڵا</div>
+                        </div>
+                    </div>
+                </div>
+                <div class="service-card">
+                    <h3>کۆی نرخ</h3>
+                    <div style="display: flex; justify-content: space-between; margin-top: 1.5rem; padding-top: 1rem; border-top: 1px solid rgba(212, 175, 55, 0.2);">
+                        <div style="text-align: center;">
+                            <div style="font-size: 2rem; font-weight: bold; color: #FFD700;" id="totalValue">0</div>
+                            <div style="font-size: 0.9rem; color: #b0b0b0;">دینار</div>
+                        </div>
+                    </div>
+                </div>
+                <div class="service-card">
+                    <h3>بەردەستی</h3>
+                    <div style="display: flex; justify-content: space-between; margin-top: 1.5rem; padding-top: 1rem; border-top: 1px solid rgba(212, 175, 55, 0.2);">
+                        <div style="text-align: center;">
+                            <div style="font-size: 2rem; font-weight: bold; color: #FFD700;" id="totalStock">0</div>
+                            <div style="font-size: 0.9rem; color: #b0b0b0;">بەردەست</div>
+                        </div>
+                    </div>
+                </div>
+                <div class="service-card">
+                    <h3>کریارە نوێیەکان</h3>
+                    <div style="display: flex; justify-content: space-between; margin-top: 1.5rem; padding-top: 1rem; border-top: 1px solid rgba(212, 175, 55, 0.2);">
+                        <div style="text-align: center;">
+                            <div style="font-size: 2rem; font-weight: bold; color: #FFD700;" id="totalOrders">0</div>
+                            <div style="font-size: 0.9rem; color: #b0b0b0;">کریار</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Notificationەکان -->
+        <div class="admin-section" id="notificationsSection" style="display: none;">
+            <h2 class="admin-section-title">🔔 Notificationەکان 
+                <span class="live-update-badge">ڕاستەوخۆ</span>
+            </h2>
+            <div class="notifications-list" id="notificationsList">
+                <!-- Notificationەکان لێرە دێن -->
+            </div>
+        </div>
+    </div>
+
+    <!-- گەڕان -->
+    <div class="search-container">
+        <div class="search-box">
+            <input type="text" class="search-input" id="searchInput" placeholder="گەڕان بە ناوی کاڵا...">
+            <button class="btn" onclick="searchProducts()">گەڕان</button>
+        </div>
+        <div class="search-filters">
+            <select class="filter-select" onchange="filterProducts()" id="categoryFilter">
+                <option value="">هەموو جۆرەکان</option>
+                <option value="👕">پیراهەت</option>
+                <option value="👖">پانتۆڵ</option>
+                <option value="🧥">جاکێت</option>
+                <option value="👟">پێڵاو</option>
+                <option value="👗">جلی ئافڕەت</option>
+            </select>
+            <select class="filter-select" onchange="filterProducts()" id="priceFilter">
+                <option value="">هەموو نرخەکان</option>
+                <option value="0-30000">٠ - ٣٠,000 دینار</option>
+                <option value="30000-50000">٣٠,000 - ٥٠,000 دینار</option>
+                <option value="50000-100000">٥٠,000+ دینار</option>
+            </select>
+        </div>
+    </div>
+
+    <!-- سەرەکی -->
+    <section class="hero" id="home">
+        <div class="hero-content">
+            <h1>LUXURY COLLECTION</h1>
+            <p>جیهانێکی تایبەت بۆ کوالیتی و ڕازاندنەوەی لوتکە</p>
+            <a href="#products" class="btn" onclick="showAllProducts()">کاڵاکان ببینە</a>
+        </div>
+    </section>
+
+    <!-- کاڵاکان -->
+    <section class="products" id="products">
+        <h2 class="section-title">کۆکراوەی لوتکە</h2>
+        <div class="products-grid" id="productsGrid">
+            <!-- کاڵاکان لێرە دروست دەبن -->
+        </div>
+    </section>
+
+    <!-- کۆمێنتەکان -->
+    <section class="products">
+        <div class="comments-section">
+            <h3 style="color: #FFD700; margin-bottom: 2rem; font-size: 2rem;">ڕەخنە و پێشنیار</h3>
+            <div class="comment-form">
+                <textarea class="comment-input" rows="3" placeholder="ڕەخنە یان پێشنیاری خۆت لێرە بنووسە..." id="commentText"></textarea>
+                <input type="text" class="comment-input" placeholder="ناوت (ئارەزومەند)" id="commentAuthor">
+                <button class="btn" onclick="addComment()">ناردنی ڕەخنە</button>
+            </div>
+            <div class="comments-list" id="commentsList">
+                <!-- کۆمێنتەکان لێرە دێن -->
+            </div>
+        </div>
+    </section>
+
+    <!-- خزمەتگوزاری -->
+    <section class="services" id="services">
+        <h2 class="section-title">خزمەتگوزارییەکان</h2>
+        <div class="services-grid">
+            <div class="service-card">
+                <div class="service-icon">🚚</div>
+                <h3>گەیاندنی خێرا</h3>
+                <p>گەیاندن بە خێرایی لە هەموو شوێنەکانەوە</p>
+            </div>
+            <div class="service-card">
+                <div class="service-icon">🔧</div>
+                <h3>گەڕاندنەوەی کاڵا</h3>
+                <p>ماوەی ٧ ڕۆژ مافی گەڕاندنەوەی کاڵا</p>
+            </div>
+            <div class="service-card">
+                <div class="service-icon">💳</div>
+                <h3>پارەی کاش</h3>
+                <p>پارەدان بە کاش کاتی گەیشتنی کاڵا</p>
+            </div>
+            <div class="service-card">
+                <div class="service-icon">📞</div>
+                <h3>پاڵپشتی</h3>
+                <p>پاڵپشتی بەردەوام لە ڕێگەی مۆبایل</p>
+            </div>
+        </div>
+    </section>
+
+    <!-- سەبەتە -->
+    <div class="cart-modal" id="cartModal">
+        <div class="cart-content">
+            <h2 style="color: #FFD700; margin-bottom: 2rem;">سەبەتەی کڕین</h2>
+            <div class="cart-items" id="cartItems">
+                <!-- کاڵاکانی سەبەتە لێرە دێن -->
+            </div>
+            <div class="total-price" id="totalPrice" style="color: #FFD700; font-size: 1.4rem; font-weight: bold; margin: 2rem 0;">کۆی گشتی: 0 دینار</div>
+            <button class="btn checkout-btn" onclick="showCheckoutForm()">تەواوکردنی کڕین</button>
+            <button class="btn btn-secondary" style="margin-top: 1rem;" onclick="toggleCart()">داخستن</button>
+        </div>
+    </div>
+
+    <!-- فورمێکی تەواوکردنی کڕین -->
+    <div class="checkout-form" id="checkoutForm">
+        <h2 style="color: #FFD700; margin-bottom: 2rem;">تەواوکردنی کڕین</h2>
+        <p style="color: #e0e0e0; margin-bottom: 2rem; font-size: 1.1rem;">کاڵاکەت بە سەرکەوتوویی کڕدرا! 🎉</p>
+        <p style="color: #e0e0e0; margin-bottom: 2rem;">کاڵاکەت دەگاتە دەستت لە ماوەی ٢-٣ ڕۆژی کارکرددا.</p>
+        <p style="color: #FFD700; margin-bottom: 2rem; font-weight: bold;"><strong>پارەدان: بە کاش کاتی گەیشتنی کاڵا</strong></p>
+        <div class="form-group">
+            <label style="color: #FFD700; margin-bottom: 0.5rem;">ناو:</label>
+            <input type="text" id="customerName" placeholder="ناوی تەواو" style="padding: 12px; background: rgba(10, 10, 10, 0.8); border: 1px solid rgba(212, 175, 55, 0.3); border-radius: 8px; color: #e0e0e0; width: 100%;">
+        </div>
+        <div class="form-group">
+            <label style="color: #FFD700; margin-bottom: 0.5rem;">ژمارەی مۆبایل:</label>
+            <input type="tel" id="customerPhone" placeholder="٠٧٧٠XXXXXXXX" style="padding: 12px; background: rgba(10, 10, 10, 0.8); border: 1px solid rgba(212, 175, 55, 0.3); border-radius: 8px; color: #e0e0e0; width: 100%;">
+        </div>
+        <div class="form-group">
+            <label style="color: #FFD700; margin-bottom: 0.5rem;">ناونیشان:</label>
+            <textarea id="customerAddress" placeholder="ناونیشانی تەواو" style="padding: 12px; background: rgba(10, 10, 10, 0.8); border: 1px solid rgba(212, 175, 55, 0.3); border-radius: 8px; color: #e0e0e0; width: 100%; height: 100px;"></textarea>
+        </div>
+        <button class="btn checkout-btn" onclick="submitOrder()">ناردنی داواکاری</button>
+    </div>
+
+    <!-- فوتەر -->
+    <footer class="footer">
+        <h3 style="color: #FFD700; margin-bottom: 1rem; font-size: 2rem;">LUXURY</h3>
+        <p style="color: #e0e0e0; margin-bottom: 2rem; font-size: 1.1rem;">جیهانێکی تایبەت بۆ کوالیتی و ڕازاندنەوەی لوتکە</p>
+        
+        <div class="payment-methods">
+            <div class="payment-method">پارەی کاش</div>
+        </div>
+        
+        <p style="color: #888; margin-top: 3rem;">© 2024 LUXURY. هەموو مافەکان پارێزراون.</p>
+        <p style="color: #888;">پەیوەندی: ٠٧٧٠-XXX-XXXX</p>
+    </footer>
+
+    <!-- Firebase Status -->
+    <div class="firebase-status" id="firebaseStatus">
+        🔄 پەیوەندی بە Firebase...
+    </div>
+
+    <script>
+        // === Firebase Configuration ===
+        const firebaseConfig = {
+            // 🔧 ئەم زانیاریانە بگۆڕە بە زانیاری Firebaseی تایبەتی خۆت
+            apiKey: "AIzaSyEXAMPLE1234567890abcdefghijklmnopq",
+            authDomain: "your-project-id.firebaseapp.com",
+            databaseURL: "https://your-project-id-default-rtdb.firebaseio.com",
+            projectId: "your-project-id",
+            storageBucket: "your-project-id.appspot.com",
+            messagingSenderId: "123456789012",
+            appId: "1:123456789012:web:abcdef1234567890"
+        };
+
+        // Initialize Firebase
+        let database;
+        try {
+            firebase.initializeApp(firebaseConfig);
+            database = firebase.database();
+            document.getElementById('firebaseStatus').innerHTML = '✅ پەیوەندی بە Firebase دروستکرا';
+            document.getElementById('firebaseStatus').classList.add('status-connected');
+        } catch (error) {
+            console.error("Firebase initialization error:", error);
+            document.getElementById('firebaseStatus').innerHTML = '❌ هەڵە لە پەیوەندی بە Firebase';
+            document.getElementById('firebaseStatus').classList.add('status-disconnected');
+        }
+
+        // گەرەکە سەرەکییەکان
+        let cart = [];
+        let totalPrice = 0;
+        let currentUser = null;
+        let isAdmin = false;
+        let notifications = [];
+        let orders = [];
+        let unreadNotifications = 0;
+        
+        let products = [
+            {
+                id: 1,
+                name: "پیراهەتی لوتکە",
+                price: 75000,
+                description: "پیراهەتی دەستکەر لوتکە بە کەشی دیزاینی تایبەت",
+                category: "👕",
+                stock: 5,
+                image: null
+            },
+            {
+                id: 2,
+                name: "پانتۆڵی پریمیوم",
+                price: 95000,
+                description: "پانتۆڵی جینی کوالیتی لوتکە بە دیزاینی مۆدێرن",
+                category: "👖",
+                stock: 3,
+                image: null
+            },
+            {
+                id: 3,
+                name: "جاکێتی لوتکە",
+                price: 125000,
+                description: "جاکێتی زستانەی لوتکە بە کەشی دیزاینی تایبەت",
+                category: "🧥",
+                stock: 2,
+                image: null
+            }
+        ];
+
+        let comments = [
+            {
+                id: 1,
+                author: "سارا",
+                text: "کوالیتی کاڵاکان زۆر لوتکەن، دڵخۆشم بە کڕینەکە!",
+                date: "2024-01-15"
+            },
+            {
+                id: 2,
+                author: "عەلی",
+                text: "خزمەتگوزاری و کوالیتی لوتکە بوون، سوپاس بۆ ئەم ئەزموونە",
+                date: "2024-01-14"
+            }
+        ];
+
+        // === Firebase Functions ===
+        function sendFirebaseNotification(orderDetails) {
+            if (!database) {
+                console.log("Firebase not initialized");
+                return;
+            }
+
+            const notification = {
+                id: Date.now(),
+                type: "کریاری نوێ",
+                title: "کریاری نوێ تەواو بوو!",
+                customerName: orderDetails.name || "بەکارهێنەری نەناسراو",
+                phone: orderDetails.phone || "نەناسراو",
+                address: orderDetails.address || "نەناسراو",
+                totalAmount: totalPrice,
+                items: cart.map(item => item.name),
+                orderTime: new Date().toLocaleString('fa-IR'),
+                status: "تەواو بوو",
+                read: false,
+                timestamp: new Date().getTime(),
+                device: isMobileDevice() ? "📱 مۆبایل" : "💻 کۆمپیوتەر"
+            };
+
+            // ناردنی notification بۆ Firebase
+            database.ref('notifications').push(notification)
+                .then(() => {
+                    console.log("✅ Notification sent to Firebase");
+                })
+                .catch((error) => {
+                    console.error("❌ Error sending to Firebase:", error);
+                });
+        }
+
+        function listenForFirebaseNotifications() {
+            if (!database) {
+                console.log("Firebase not initialized");
+                return;
+            }
+
+            database.ref('notifications').on('child_added', (snapshot) => {
+                const notification = snapshot.val();
+                
+                // زیادکردنی notification بە لیستەکە
+                notifications.unshift(notification);
+                unreadNotifications++;
+                
+                // نمایشی notification تەنیا بۆ ئەدمینەکان
+                if (isAdmin) {
+                    showNotificationAlert(notification);
+                    updateAdminPanels();
+                    updateNotificationBadges();
+                    playNotificationSound();
+                }
+                
+                console.log("🔔 New notification received from Firebase:", notification);
+            });
+        }
+
+        function isMobileDevice() {
+            return /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
+        }
+
+        // === سیستەمی ناسنامە پێدان ===
+        function login() {
+            const username = prompt("ناوی بەکارهێنەر:");
+            const password = prompt("وشەی نهێنی:");
+            
+            if (username === "admin" && password === "1234") {
+                currentUser = "admin";
+                isAdmin = true;
+                alert("✅ بە سەرکەوتوویی چوویتەژوورەوە وەک ئەدمین!");
+                showAdminPanel();
+                document.getElementById('logoutButtonItem').style.display = 'block';
+                document.getElementById('loginButtonItem').style.display = 'none';
+                document.getElementById('adminNotificationItem').style.display = 'block';
+                displayProducts();
+                updateNotificationBadges();
+                
+                // دەستپێکردنی گوێگرتن لە Firebase notifications
+                listenForFirebaseNotifications();
+                return true;
+            } else {
+                alert("❌ ناوی بەکارهێنەر یان وشەی نهێنی هەڵەە!");
+                isAdmin = false;
+                hideAdminPanel();
+                return false;
+            }
+        }
+
+        function logout() {
+            currentUser = null;
+            isAdmin = false;
+            alert("✅ بە سەرکەوتوویی چوویتەدەرەوە!");
+            hideAdminPanel();
+            document.getElementById('logoutButtonItem').style.display = 'none';
+            document.getElementById('loginButtonItem').style.display = 'block';
+            document.getElementById('adminNotificationItem').style.display = 'none';
+            displayProducts();
+        }
+
+        function showAdminPanel() {
+            document.getElementById('adminHeader').style.display = 'block';
+            document.getElementById('adminPanel').style.display = 'block';
+        }
+
+        function hideAdminPanel() {
+            document.getElementById('adminHeader').style.display = 'none';
+            document.getElementById('adminPanel').style.display = 'none';
+        }
+
+        // === سیستەمی Notification ===
+        function sendOrderNotification(orderDetails) {
+            const notification = {
+                id: Date.now(),
+                type: "کریاری نوێ",
+                title: "کریاری نوێ تەواو بوو!",
+                customerName: orderDetails.name || "بەکارهێنەری نەناسراو",
+                phone: orderDetails.phone || "نەناسراو",
+                address: orderDetails.address || "نەناسراو",
+                totalAmount: totalPrice,
+                items: cart.map(item => item.name),
+                orderTime: new Date().toLocaleString('fa-IR'),
+                status: "تەواو بوو",
+                read: false,
+                timestamp: new Date()
+            };
+
+            // زیادکردنی notification بە لیستە ناوخۆییەکە
+            notifications.unshift(notification);
+            unreadNotifications++;
+            
+            // زیادکردنی کریار
+            const order = {
+                id: notification.id,
+                ...orderDetails,
+                totalAmount: totalPrice,
+                items: [...cart],
+                orderTime: new Date()
+            };
+            orders.unshift(order);
+
+            // ناردنی notification بۆ Firebase (بۆ هەموو ئەدمینەکان)
+            sendFirebaseNotification(orderDetails);
+
+            console.log("🔔 NOTIFICATION:");
+            console.log("کریاری نوێ تەواو بوو!");
+            console.log("نێردراو: " + notification.customerName);
+
+            // نمایشی notification بۆ ئەدمینەکان
+            if (isAdmin) {
+                showNotificationAlert(notification);
+                updateAdminPanels();
+            }
+            
+            playNotificationSound();
+        }
+
+        function updateAdminPanels() {
+            updateStatistics();
+            
+            if (document.getElementById('productsListSection').style.display === 'block') {
+                displayAdminProducts();
+            }
+            
+            if (document.getElementById('notificationsSection').style.display === 'block') {
+                displayNotifications();
+            }
+            
+            updateNotificationBadges();
+        }
+
+        function updateNotificationBadges() {
+            const badge = document.getElementById('notificationBadge');
+            const adminBadge = document.getElementById('adminNotificationBadge');
+            
+            if (unreadNotifications > 0) {
+                badge.textContent = unreadNotifications;
+                badge.style.display = 'flex';
+                adminBadge.textContent = unreadNotifications;
+                adminBadge.style.display = 'inline-flex';
+            } else {
+                badge.style.display = 'none';
+                adminBadge.style.display = 'none';
+            }
+        }
+
+        function playNotificationSound() {
+            try {
+                const audioContext = new (window.AudioContext || window.webkitAudioContext)();
+                const oscillator = audioContext.createOscillator();
+                const gainNode = audioContext.createGain();
+                
+                oscillator.connect(gainNode);
+                gainNode.connect(audioContext.destination);
+                
+                oscillator.frequency.value = 800;
+                oscillator.type = 'sine';
+                
+                gainNode.gain.setValueAtTime(0, audioContext.currentTime);
+                gainNode.gain.linearRampToValueAtTime(0.1, audioContext.currentTime + 0.1);
+                gainNode.gain.linearRampToValueAtTime(0, audioContext.currentTime + 0.3);
+                
+                oscillator.start(audioContext.currentTime);
+                oscillator.stop(audioContext.currentTime + 0.3);
+            } catch (error) {
+                console.log("دەنگی notification کارنەکات");
+            }
+        }
+
+        function showNotificationAlert(notification) {
+            const alertDiv = document.createElement('div');
+            alertDiv.className = 'notification-alert';
+            
+            alertDiv.innerHTML = `
+                <div style="font-weight: bold; margin-bottom: 10px; font-size: 1.1rem;">
+                    🔔 کریاری نوێ تەواو بوو!
+                </div>
+                <div style="font-size: 0.9rem;">
+                    <strong>${notification.customerName}</strong><br>
+                    ${notification.totalAmount.toLocaleString()} دینار<br>
+                    <small>${notification.orderTime}</small>
+                    ${notification.device ? `<br><small>${notification.device}</small>` : ''}
+                </div>
+            `;
+            
+            document.body.appendChild(alertDiv);
+            
+            setTimeout(() => {
+                alertDiv.remove();
+            }, 5000);
+        }
+
+        function showNotifications() {
+            document.getElementById('addProductSection').style.display = 'none';
+            document.getElementById('productsListSection').style.display = 'none';
+            document.getElementById('statisticsSection').style.display = 'none';
+            document.getElementById('notificationsSection').style.display = 'block';
+            displayNotifications();
+            
+            unreadNotifications = 0;
+            updateNotificationBadges();
+            
+            notifications.forEach(notification => {
+                notification.read = true;
+            });
+        }
+
+        function displayNotifications() {
+            const notificationsList = document.getElementById('notificationsList');
+            notificationsList.innerHTML = '';
+
+            if (notifications.length === 0) {
+                notificationsList.innerHTML = `
+                    <div style="text-align: center; padding: 3rem; color: #666;">
+                        <div style="font-size: 4rem; margin-bottom: 1rem;">🔔</div>
+                        <h3 style="color: #FFD700;">هیچ notificationێک نیە</h3>
+                        <p style="color: #b0b0b0;">کاتێک کریارێکی نوێ هەیە، notification لێرە دەردەکەوێت</p>
+                    </div>
+                `;
+                return;
+            }
+
+            notifications.forEach(notification => {
+                const notificationElement = document.createElement('div');
+                notificationElement.className = `notification-item ${notification.read ? '' : 'new'}`;
+                
+                notificationElement.innerHTML = `
+                    <div class="notification-header">
+                        <div class="notification-title">${notification.title}</div>
+                        <div class="notification-time">${notification.orderTime}</div>
+                    </div>
+                    <div class="notification-content">
+                        <strong>نێردراو:</strong> ${notification.customerName}<br>
+                        <strong>مۆبایل:</strong> ${notification.phone}<br>
+                        <strong>ناونیشان:</strong> ${notification.address}<br>
+                        <strong>کۆی نرخ:</strong> ${notification.totalAmount.toLocaleString()} دینار<br>
+                        <strong>کاڵاکان:</strong> ${notification.items.join("، ")}
+                        ${notification.device ? `<br><strong>ئامێر:</strong> ${notification.device}` : ''}
+                    </div>
+                `;
+                
+                notificationsList.appendChild(notificationElement);
+            });
+        }
+
+        // === فەنکشنەکانی کاڵاکان ===
+        function showAllProducts() {
+            displayProducts(products);
+        }
+
+        function searchProducts() {
+            const searchTerm = document.getElementById('searchInput').value.toLowerCase();
+            if (searchTerm.trim() === '') {
+                showAllProducts();
+                return;
+            }
+            
+            const filteredProducts = products.filter(product => 
+                product.name.toLowerCase().includes(searchTerm) ||
+                product.description.toLowerCase().includes(searchTerm)
+            );
+            displayProducts(filteredProducts);
+        }
+
+        function filterProducts() {
+            const category = document.getElementById('categoryFilter').value;
+            const priceRange = document.getElementById('priceFilter').value;
+            
+            let filteredProducts = products;
+            
+            if (category) {
+                filteredProducts = filteredProducts.filter(product => product.category === category);
+            }
+            
+            if (priceRange) {
+                const [min, max] = priceRange.split('-').map(Number);
+                filteredProducts = filteredProducts.filter(product => {
+                    if (max) {
+                        return product.price >= min && product.price <= max;
+                    } else {
+                        return product.price >= min;
+                    }
+                });
+            }
+            
+            displayProducts(filteredProducts);
+        }
+
+        function displayProducts(productsToDisplay = products) {
+            const productsGrid = document.getElementById('productsGrid');
+            productsGrid.innerHTML = '';
+
+            if (productsToDisplay.length === 0) {
+                productsGrid.innerHTML = `
+                    <div style="grid-column: 1/-1; text-align: center; padding: 3rem; color: #666;">
+                        <div style="font-size: 4rem; margin-bottom: 1rem;">😔</div>
+                        <h3 style="color: #FFD700;">هیچ کاڵایەک نەدۆزرایەوە</h3>
+                        <button class="btn" onclick="showAllProducts()" style="margin-top: 1rem;">
+                            بینینی هەموو کاڵاکان
+                        </button>
+                    </div>
+                `;
+                return;
+            }
+
+            productsToDisplay.forEach(product => {
+                const productCard = document.createElement('div');
+                productCard.className = 'product-card';
+                
+                const imageContent = product.image 
+                    ? `<img src="${product.image}" alt="${product.name}" style="width: 100%; height: 100%; object-fit: cover;">`
+                    : `<div class="product-image-placeholder">${product.category}</div>`;
+
+                productCard.innerHTML = `
+                    <div class="product-image">
+                        ${imageContent}
+                    </div>
+                    <div class="product-info">
+                        <h3 class="product-title">${product.name}</h3>
+                        <p class="product-description">${product.description}</p>
+                        <div class="cash-badge">پارەدان بە کاش کاتی گەیشتن</div>
+                        <p class="product-price">${product.price.toLocaleString()} دینار</p>
+                        <p style="color: #b0b0b0; font-size: 0.9rem; margin-bottom: 1rem;">بڕی بەردەست: ${product.stock}</p>
+                        <div class="product-actions">
+                            <button class="btn" onclick="addToCart(${product.id})" ${product.stock === 0 ? 'disabled' : ''}>
+                                ${product.stock === 0 ? 'بەردەست نیە' : 'زیادکردن بە سەبەتە'}
+                            </button>
+                            ${isAdmin ? `<button class="btn btn-warning" onclick="editProduct(${product.id})">✏️ ئایدیت</button>` : ''}
+                        </div>
+                    </div>
+                `;
+                productsGrid.appendChild(productCard);
+            });
+        }
+
+        // === سیستەمی سەبەتە ===
+        function addToCart(productId) {
+            const product = products.find(p => p.id === productId);
+            if (product) {
+                if (product.stock > 0) {
+                    cart.push(product);
+                    totalPrice += product.price;
+                    product.stock--;
+                    updateCartDisplay();
+                    displayProducts();
+                    
+                    if (isAdmin) {
+                        updateAdminPanels();
+                    }
+                    
+                    alert('✅ ' + product.name + ' زیادکرا بە سەبەتە!');
+                } else {
+                    alert('❌ ئەم کاڵایە بەردەست نیە!');
+                }
+            }
+        }
+
+        function updateCartDisplay() {
+            document.querySelector('.cart-count').textContent = cart.length;
+            const cartItems = document.getElementById('cartItems');
+            const totalPriceElement = document.getElementById('totalPrice');
+            
+            cartItems.innerHTML = '';
+            cart.forEach(item => {
+                const itemElement = document.createElement('div');
+                itemElement.className = 'cart-item';
+                itemElement.innerHTML = `
+                    <span style="color: #e0e0e0;">${item.name}</span>
+                    <span style="color: #FFD700; font-weight: bold;">${item.price.toLocaleString()} دینار</span>
+                `;
+                cartItems.appendChild(itemElement);
+            });
+            
+            totalPriceElement.textContent = `کۆی گشتی: ${totalPrice.toLocaleString()} دینار`;
+        }
+
+        function toggleCart() {
+            const modal = document.getElementById('cartModal');
+            modal.style.display = modal.style.display === 'block' ? 'none' : 'block';
+        }
+
+        function showCheckoutForm() {
+            if (cart.length === 0) {
+                alert('سەبەتەکەت خالیە!');
+                return;
+            }
+            
+            document.getElementById('cartModal').style.display = 'none';
+            document.getElementById('checkoutForm').style.display = 'block';
+            
+            document.getElementById('checkoutForm').scrollIntoView({ 
+                behavior: 'smooth' 
+            });
+        }
+
+        function submitOrder() {
+            const name = document.getElementById('customerName').value;
+            const phone = document.getElementById('customerPhone').value;
+            const address = document.getElementById('customerAddress').value;
+            
+            if (!name || !phone || !address) {
+                alert('❌ تکایە هەموو زانیارییەکان تەواو بکە!');
+                return;
+            }
+            
+            const orderDetails = {
+                name: name,
+                phone: phone,
+                address: address
+            };
+            
+            // ناردنی notification بۆ هەموو ئەدمینەکان لە ڕێگەی Firebase
+            sendOrderNotification(orderDetails);
+            
+            alert('✅ داواکاریەکەت بە سەرکەوتوویی نێردرا!');
+            
+            cart = [];
+            totalPrice = 0;
+            updateCartDisplay();
+            document.getElementById('checkoutForm').style.display = 'none';
+            
+            document.getElementById('customerName').value = '';
+            document.getElementById('customerPhone').value = '';
+            document.getElementById('customerAddress').value = '';
+            
+            displayProducts();
+        }
+
+        // === سیستەمی کۆمێنت ===
+        function addComment() {
+            const text = document.getElementById('commentText').value;
+            const author = document.getElementById('commentAuthor').value || "بەکارهێنەری نەناسراو";
+            
+            if (text.trim()) {
+                const newComment = {
+                    id: Date.now(),
+                    author: author,
+                    text: text,
+                    date: new Date().toISOString().split('T')[0]
+                };
+                
+                comments.unshift(newComment);
+                displayComments();
+                
+                document.getElementById('commentText').value = '';
+                document.getElementById('commentAuthor').value = '';
+                
+                alert('✅ سوپاس بۆ ڕەخنەکەت!');
+            }
+        }
+
+        function displayComments() {
+            const commentsList = document.getElementById('commentsList');
+            commentsList.innerHTML = '';
+            
+            comments.forEach(comment => {
+                const commentElement = document.createElement('div');
+                commentElement.className = 'comment';
+                commentElement.innerHTML = `
+                    <div class="comment-author">${comment.author}</div>
+                    <div class="comment-date">${comment.date}</div>
+                    <div class="comment-text">${comment.text}</div>
+                `;
+                commentsList.appendChild(commentElement);
+            });
+        }
+
+        // === بەشی بەڕێوەبردن ===
+        function showAddProductForm() {
+            document.getElementById('addProductSection').style.display = 'block';
+            document.getElementById('productsListSection').style.display = 'none';
+            document.getElementById('statisticsSection').style.display = 'none';
+            document.getElementById('notificationsSection').style.display = 'none';
+        }
+
+        function showProductsList() {
+            document.getElementById('addProductSection').style.display = 'none';
+            document.getElementById('productsListSection').style.display = 'block';
+            document.getElementById('statisticsSection').style.display = 'none';
+            document.getElementById('notificationsSection').style.display = 'none';
+            displayAdminProducts();
+        }
+
+        function showStatistics() {
+            document.getElementById('addProductSection').style.display = 'none';
+            document.getElementById('productsListSection').style.display = 'none';
+            document.getElementById('statisticsSection').style.display = 'block';
+            document.getElementById('notificationsSection').style.display = 'none';
+            updateStatistics();
+        }
+
+        function displayAdminProducts() {
+            const adminGrid = document.getElementById('adminProductsGrid');
+            adminGrid.innerHTML = '';
+            
+            products.forEach(product => {
+                const productCard = document.createElement('div');
+                productCard.className = 'product-card';
+                
+                const imageContent = product.image 
+                    ? `<img src="${product.image}" alt="${product.name}" style="width: 100%; height: 100%; object-fit: cover;">`
+                    : `<div class="product-image-placeholder">${product.category}</div>`;
+
+                productCard.innerHTML = `
+                    <div class="product-image">
+                        ${imageContent}
+                    </div>
+                    <div class="product-info">
+                        <h3 class="product-title">${product.name}</h3>
+                        <p class="product-description">${product.description}</p>
+                        <div style="display: flex; justify-content: space-between; margin-top: 1.5rem; padding-top: 1rem; border-top: 1px solid rgba(212, 175, 55, 0.2);">
+                            <div style="text-align: center;">
+                                <div style="font-size: 1.3rem; font-weight: bold; color: #FFD700;">${product.price.toLocaleString()}</div>
+                                <div style="font-size: 0.8rem; color: #b0b0b0;">نرخ</div>
+                            </div>
+                            <div style="text-align: center;">
+                                <div style="font-size: 1.3rem; font-weight: bold; color: #FFD700;">${product.stock}</div>
+                                <div style="font-size: 0.8rem; color: #b0b0b0;">بەردەست</div>
+                            </div>
+                        </div>
+                        <div class="product-actions">
+                            <button class="btn btn-warning" onclick="editProduct(${product.id})">✏️ ئایدیت</button>
+                            <button class="btn btn-danger" onclick="deleteProduct(${product.id})">🗑️ سڕینەوە</button>
+                        </div>
+                    </div>
+                `;
+                adminGrid.appendChild(productCard);
+            });
+        }
+
+        function updateStatistics() {
+            const totalProducts = products.length;
+            const totalValue = products.reduce((sum, product) => sum + product.price, 0);
+            const totalStock = products.reduce((sum, product) => sum + product.stock, 0);
+            const totalOrders = orders.length;
+            
+            document.getElementById('totalProducts').textContent = totalProducts;
+            document.getElementById('totalValue').textContent = totalValue.toLocaleString();
+            document.getElementById('totalStock').textContent = totalStock;
+            document.getElementById('totalOrders').textContent = totalOrders;
+        }
+
+        function editProduct(productId) {
+            const product = products.find(p => p.id === productId);
+            if (product) {
+                document.getElementById('productName').value = product.name;
+                document.getElementById('productPrice').value = product.price;
+                document.getElementById('productDescription').value = product.description;
+                document.getElementById('productCategory').value = product.category;
+                document.getElementById('productStock').value = product.stock;
+                
+                products = products.filter(p => p.id !== productId);
+                showAddProductForm();
+                alert('ئێستا دەتوانیت زانیارییە نوێەکان بنووسی و کلیک بکە لەسەر "زیادکردنی کاڵا"');
+            }
+        }
+
+        function deleteProduct(productId) {
+            if (confirm('دڵنیایت دەتەوێ ئەم کاڵایە بسڕیتەوە؟')) {
+                products = products.filter(product => product.id !== productId);
+                displayProducts();
+                displayAdminProducts();
+                updateStatistics();
+                alert('✅ کاڵا سڕدرایەوە!');
+            }
+        }
+
+        // زیادکردنی کاڵای نوێ
+        document.getElementById('addProductForm').addEventListener('submit', function(e) {
+            e.preventDefault();
+            
+            const name = document.getElementById('productName').value;
+            const price = parseInt(document.getElementById('productPrice').value);
+            const description = document.getElementById('productDescription').value;
+            const category = document.getElementById('productCategory').value;
+            const stock = parseInt(document.getElementById('productStock').value);
+            
+            const newProduct = {
+                id: Date.now(),
+                name,
+                price,
+                description,
+                category,
+                stock,
+                image: null
+            };
+            
+            products.push(newProduct);
+            displayProducts();
+            this.reset();
+            alert('✅ کاڵای نوێ زیادکرا!');
+            
+            updateStatistics();
+            showProductsList();
+        });
+
+        function clearForm() {
+            document.getElementById('addProductForm').reset();
+        }
+
+        // دەستپێکردن
+        document.addEventListener('DOMContentLoaded', function() {
+            showAllProducts();
+            displayComments();
+            updateStatistics();
+            hideAdminPanel();
+        });
+    </script>
+</body>
+</html>
